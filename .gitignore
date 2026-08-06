@@ -1,0 +1,27 @@
+# Environment & System Prompt
+AGENT.md
+.env
+.env.local
+.env*.local
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+backend/venv/
+backend/.env
+.pytest_cache/
+.coverage
+
+# Node / Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env.local
+
+# IDE & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
