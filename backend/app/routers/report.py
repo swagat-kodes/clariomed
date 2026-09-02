@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, status
 from app.models.schemas import ReportSimplifyResponse, MedicalSummary, LabResultItem
 from app.services.pdf_service import pdf_service
 from app.services.gemini_service import gemini_service
+from app.services.supabase_service import supabase_service
 from datetime import datetime
 import uuid
 import json
@@ -57,30 +58,36 @@ async def simplify_medical_report(
             mime = content_type if content_type in ALLOWED_MIME_TYPES else "image/png"
             images = [(file_bytes, mime)]
 
-        # Call Gemini service if API key configured, otherwise return clear stub feedback
+        # Call Gemini service if API key configured, otherwise fallback to demo preview
         try:
-            analysis_raw = await gemini_service.analyze_medical_report(images)
+            gemini_data = await gemini_service.analyze_medical_report(images)
             
-            # For demonstration & structured mapping:
+            lab_items = []
+            for item in gemini_data.get("lab_results", []):
+                lab_items.append(
+                    LabResultItem(
+                        test_name=item.get("test_name", "Test"),
+                        value=item.get("value", "N/A"),
+                        reference_range=item.get("reference_range"),
+                        status=item.get("status", "Normal"),
+                        explanation=item.get("explanation", "")
+                    )
+                )
+
             medical_summary = MedicalSummary(
-                key_findings=[
-                    "Report received and processed successfully.",
-                    "Analyzed multi-modal report page(s)."
-                ],
-                simplification=analysis_raw,
-                lab_results=[],
-                actionable_questions=[
-                    "What do these lab values mean for my daily routine?",
-                    "Do I need any follow-up blood tests in 3 to 6 months?"
-                ]
+                key_findings=gemini_data.get("key_findings", []),
+                simplification=gemini_data.get("simplification", "No summary generated."),
+                lab_results=lab_items,
+                actionable_questions=gemini_data.get("actionable_questions", [])
             )
         except ValueError as val_err:
             # When GEMINI_API_KEY is not set yet in environment
             medical_summary = MedicalSummary(
                 key_findings=[
-                    "Backend scaffolding active. GEMINI_API_KEY needs to be configured in .env."
+                    "Report received and parsed by PyMuPDF engine.",
+                    "GEMINI_API_KEY environment variable is not configured."
                 ],
-                simplification="File received successfully. Configure GEMINI_API_KEY in backend/.env to view live AI medical report simplifications.",
+                simplification="File uploaded and rendered successfully. Add your GEMINI_API_KEY in backend/.env to activate full Gemini 2.5 Flash analysis.",
                 lab_results=[
                     LabResultItem(
                         test_name="Hemoglobin (Demo)",
@@ -95,15 +102,50 @@ async def simplify_medical_report(
                         reference_range="< 200 mg/dL",
                         status="High",
                         explanation="Elevated cholesterol level. Discuss diet and exercise recommendations with your physician."
+                    ),
+                    LabResultItem(
+                        test_name="Glucose (Fast), Plasma (Demo)",
+                        value="92 mg/dL",
+                        reference_range="70 - 99 mg/dL",
+                        status="Normal",
+                        explanation="Fasting blood sugar level is within standard healthy bounds."
                     )
                 ],
                 actionable_questions=[
-                    "Should I adjust my diet or exercise regimen?",
-                    "When should we re-check these levels?"
+                    "What lifestyle modifications would be most beneficial for my current lab results?",
+                    "When should we schedule follow-up blood work?"
                 ]
             )
 
         report_id = str(uuid.uuid4())
+
+        # Persist to Supabase if configured
+        if supabase_service.client:
+            try:
+                supabase_service.client.table("reports").insert({
+                    "id": report_id,
+                    "filename": file.filename,
+                    "simplification": medical_summary.simplification,
+                    "key_findings": medical_summary.key_findings,
+                    "actionable_questions": medical_summary.actionable_questions
+                }).execute()
+
+                if medical_summary.lab_results:
+                    lab_records = [
+                        {
+                            "report_id": report_id,
+                            "test_name": lr.test_name,
+                            "observed_value": lr.value,
+                            "reference_range": lr.reference_range,
+                            "status": lr.status,
+                            "explanation": lr.explanation
+                        }
+                        for lr in medical_summary.lab_results
+                    ]
+                    supabase_service.client.table("lab_results").insert(lab_records).execute()
+            except Exception as sp_err:
+                print(f"[Supabase Warning] Unable to persist report: {sp_err}")
+
         return ReportSimplifyResponse(
             id=report_id,
             filename=file.filename,
