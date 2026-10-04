@@ -3,12 +3,14 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, FileText, Loader2, AlertCircle, FileCheck } from 'lucide-react';
 import { ReportSimplifyResponse } from '@/types/report';
+import { useApp } from '@/context/AppContext';
 
 interface ReportUploaderProps {
   onReportProcessed: (report: ReportSimplifyResponse) => void;
 }
 
 export const ReportUploader: React.FC<ReportUploaderProps> = ({ onReportProcessed }) => {
+  const { t, language } = useApp();
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export const ReportUploader: React.FC<ReportUploaderProps> = ({ onReportProcesse
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('language', language);
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -71,13 +74,13 @@ export const ReportUploader: React.FC<ReportUploaderProps> = ({ onReportProcesse
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm">
-      <h2 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-        <UploadCloud className="w-5 h-5 text-teal-600" />
-        Upload Medical Report
+    <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-[#4c956c]/20 dark:border-slate-800 shadow-sm transition-all hover:border-[#4c956c]/40">
+      <h2 className="text-lg font-extrabold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+        <UploadCloud className="w-5 h-5 text-[#2c6e49] dark:text-[#4c956c]" />
+        {t.uploadTitle}
       </h2>
-      <p className="text-xs text-slate-500 mb-6">
-        Upload your lab report or clinical document (PDF, PNG, JPEG, WebP) for instant AI breakdown.
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+        {t.uploadSubtitle}
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,10 +88,10 @@ export const ReportUploader: React.FC<ReportUploaderProps> = ({ onReportProcesse
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+          className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
             file
-              ? 'border-teal-500 bg-teal-50/30'
-              : 'border-slate-300 hover:border-teal-400 bg-slate-50/50 hover:bg-slate-50'
+              ? 'border-[#2c6e49] bg-[#fefee3]/50 dark:bg-[#2c6e49]/15'
+              : 'border-slate-200 dark:border-slate-700 hover:border-[#4c956c] bg-slate-50/50 dark:bg-slate-800/40 hover:bg-[#fefee3]/30 dark:hover:bg-slate-800'
           }`}
         >
           <input
@@ -101,29 +104,29 @@ export const ReportUploader: React.FC<ReportUploaderProps> = ({ onReportProcesse
 
           {file ? (
             <div className="flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-[#4c956c]/15 text-[#2c6e49] dark:text-[#4c956c] flex items-center justify-center">
                 <FileCheck className="w-6 h-6" />
               </div>
-              <p className="text-sm font-semibold text-slate-800">{file.name}</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">{file.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {(file.size / (1024 * 1024)).toFixed(2)} MB • Click or drag to replace file
               </p>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-[#fefee3] dark:bg-slate-800 border border-[#4c956c]/20 text-[#2c6e49] dark:text-[#4c956c] flex items-center justify-center">
                 <FileText className="w-6 h-6" />
               </div>
-              <p className="text-sm font-medium text-slate-700">
-                Drag & drop your medical document here, or <span className="text-teal-600 font-semibold underline">browse</span>
+              <p className="text-sm font-medium text-slate-900 dark:text-white">
+                {t.dragDropText} <span className="text-[#2c6e49] dark:text-[#4c956c] font-bold underline">{t.browseText}</span>
               </p>
-              <p className="text-xs text-slate-400">Supports PDF, PNG, JPG, WEBP (Up to 25MB)</p>
+              <p className="text-xs text-slate-400">{t.supportedFormats}</p>
             </div>
           )}
         </div>
 
         {error && (
-          <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 text-rose-700 text-xs border border-rose-200">
+          <div className="flex items-start gap-2 p-3.5 rounded-xl bg-[#ffc9b9]/30 dark:bg-red-950/40 text-[#b54a32] dark:text-red-300 text-xs border border-[#ffc9b9] dark:border-red-900">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -132,17 +135,17 @@ export const ReportUploader: React.FC<ReportUploaderProps> = ({ onReportProcesse
         <button
           type="submit"
           disabled={!file || isLoading}
-          className="w-full py-3.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-semibold text-sm shadow-md shadow-teal-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+          className="w-full py-3.5 px-4 rounded-2xl bg-[#2c6e49] hover:bg-[#23593a] disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-[#2c6e49]/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Analyzing & Simplifying Report...
+              {t.simplifyingBtn}
             </>
           ) : (
             <>
               <UploadCloud className="w-5 h-5" />
-              Simplify Report Now
+              {t.simplifyBtn}
             </>
           )}
         </button>

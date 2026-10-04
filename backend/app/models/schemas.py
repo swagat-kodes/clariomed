@@ -30,3 +30,13 @@ class HealthCheckResponse(BaseModel):
     status: str = Field(..., example="healthy")
     project: str = Field(..., example="ClarioMed API")
     version: str = Field(..., example="0.1.0")
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., description="User question for medical AI assistant")
+    language: str = Field(default="en", description="Target language: en, hi, mr")
+    report_context: Optional[dict] = Field(None, description="Optional medical report context")
+
+class ChatResponse(BaseModel):
+    reply: str = Field(..., description="AI response text")
+    is_refusal: bool = Field(default=False, description="True if prompt was non-medical and refused")
+

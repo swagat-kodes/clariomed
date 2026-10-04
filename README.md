@@ -7,7 +7,7 @@
 ## 🌟 Key Features
 
 - 📑 **Multi-Modal Document Processing**: Support for PDFs and image formats (PNG, JPEG, WebP). PyMuPDF (`fitz`) renders multi-page PDF documents into visual page streams.
-- 🤖 **Google Gemini 2.5 Flash Integration**: Leverages Google's unified `google-genai` SDK for empathetic, accurate medical report simplification.
+- 🤖 **Google Gemini 3.6 Flash Integration**: Leverages Google's unified `google-genai` SDK for empathetic, accurate medical report simplification.
 - 🩸 **Lab Test Breakdown**: Extracts lab test names, observed values, reference ranges, and color-coded status badges:
   - 🔴 **High**: Values above standard reference ranges.
   - 🔵 **Low**: Values below standard reference ranges.
@@ -23,7 +23,7 @@
 | :--- | :--- | :--- |
 | **Frontend** | Next.js 15 (App Router), TypeScript, Tailwind CSS, Lucide Icons | Vercel |
 | **Backend** | Python 3.11+, FastAPI, Pydantic v2, PyMuPDF (`fitz`) | Render |
-| **AI Model** | Google Gemini API (`google-genai` SDK, `gemini-2.5-flash`) | Google AI |
+| **AI Model** | Google Gemini API (`google-genai` SDK, `gemini-3.6-flash`) | Google AI |
 | **Database & Vector** | Supabase (PostgreSQL, `pgvector` 768-dim, Storage, RLS) | Supabase Cloud |
 
 ---
@@ -36,7 +36,7 @@ ClarioMed/
 │   ├── app/
 │   │   ├── models/           # Pydantic v2 data models
 │   │   ├── routers/          # API route definitions (/health, /reports)
-│   │   ├── services/         # PyMuPDF, Gemini 2.5 Flash, Supabase integrations
+│   │   ├── services/         # PyMuPDF, Gemini 3.6 Flash, Supabase integrations
 │   │   ├── config.py         # App configuration & settings
 │   │   └── main.py           # FastAPI entry point & CORS configuration
 │   ├── requirements.txt      # Backend Python dependencies
@@ -87,7 +87,7 @@ cp .env.example .env
 Fill in your credentials in `backend/.env`:
 ```env
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.6-flash
 GEMINI_EMBEDDING_MODEL=text-embedding-004
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your_anon_key
